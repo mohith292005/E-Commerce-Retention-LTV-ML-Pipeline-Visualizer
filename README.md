@@ -1,70 +1,162 @@
-# E-Commerce Customer Retention & LTV — ML Pipeline Visualizer
+# 🛒 E-Commerce Customer Retention & LTV — ML Pipeline Visualizer
 
-An interactive Streamlit dashboard that **animates the execution of an
-end-to-end Scikit-Learn pipeline** for e-commerce customer retention and
-lifetime-value prediction — timestamped terminal logs, staged progress bars,
-Plotly cluster maps with a pulsing target marker, a churn gauge chart, an LTV
-metric card and an automated decision banner.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python" />
+  <img src="https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?logo=streamlit" />
+  <img src="https://img.shields.io/badge/Scikit--Learn-ML-orange?logo=scikitlearn" />
+  <img src="https://img.shields.io/badge/Plotly-Visualization-3F4F75?logo=plotly" />
+</p>
 
-## Run it
+<p align="center">
+  An interactive machine learning dashboard for predicting customer churn, estimating lifetime value (LTV), segmenting customers, and generating automated retention strategies.
+</p>
 
-```bash
-pip install -r requirements.txt
-python data_generator.py     # optional: regenerate data/synthetic_customers.csv
-python pipeline.py           # optional: retrain models/pipeline_models.joblib
-streamlit run app.py
+<p align="center">
+  🚀 **[Live Demo](https://e-commerce-retention-ltv-ml-pipeline-visualizer-xyvnunsfj22n9b.streamlit.app/)**
+</p>
+
+## 🧰 Tech Stack
+
+* **Language:** Python
+* **Dashboard:** Streamlit
+* **Machine Learning:** Scikit-Learn
+* **Data Processing:** Pandas, NumPy
+* **Visualization:** Plotly
+* **Models:** K-Means, Logistic Regression, Ridge Regression
+* **Model Storage:** Joblib
+* **Testing:** Streamlit AppTest, Python Unit Tests
+* **Deployment:** Streamlit Community Cloud
+
+## 📌 Overview
+
+This project simulates an end-to-end ML pipeline using 1,000 synthetic e-commerce customers. It predicts churn probability, estimates customer lifetime value, identifies behavioral customer segments, and recommends personalized retention actions.
+
+The dashboard features animated pipeline execution, timestamped terminal logs, interactive visualizations, and automated decision-making.
+
+## 🔄 Project Workflow
+
+```mermaid
+flowchart TD
+    A["Synthetic Data Generation"] --> B["Data Preprocessing"]
+    B --> C["Customer Segmentation"]
+    B --> D["Churn Prediction"]
+    B --> E["LTV Prediction"]
+    C --> F["Decision Engine"]
+    D --> F
+    E --> G["Dashboard Visualization"]
+    F --> G
 ```
 
-The app is self-contained: on first launch it generates the dataset, trains
-the pipeline and persists the model bundle automatically.
+| Stage | Process          | Description                                                                         |
+| ----- | ---------------- | ----------------------------------------------------------------------------------- |
+| 1     | Data Generation  | Generate 1,000 customers with approximately 25% churn and 5% missing feature values |
+| 2     | Preprocessing    | Median imputation and StandardScaler                                                |
+| 3     | Segmentation     | K-Means clustering into three customer groups                                       |
+| 4     | Churn Prediction | Logistic Regression predicts churn probability                                      |
+| 5     | LTV Prediction   | Ridge Regression estimates customer lifetime value                                  |
+| 6     | Decision Engine  | Recommends retention actions based on churn risk and customer segment               |
 
-## Architecture
+### 👥 Customer Segments
 
-| Stage | What happens | Where |
-|---|---|---|
-| 0. Data | 1,000 synthetic customers; ~25% churn (quantile-split risk score); ~5% NaNs injected into feature columns only | `data_generator.py` |
-| 1. Preprocess | Median imputation (training medians cached for train/serve parity) + `StandardScaler` on all 5 features | `pipeline.py` |
-| 2. Segment | `KMeans(n_clusters=3)` on the behavioural subspace (*Days since last purchase, Total purchases, Avg order value*); centroids are permuted so IDs match the business labels: **0 = At-Risk Bargain Hunters, 1 = Consistent Mid-Tier, 2 = VIP High Spenders** | `pipeline.py` |
-| 3. Infer (parallel) | `LogisticRegression` -> churn probability (ROC-AUC ~ 0.79) · `Ridge` -> continuous Total LTV (RMSE ~ $145) | `pipeline.py` |
-| 4. Decide | `churn > 0.70` + At-Risk -> *15% discount voucher*; `churn > 0.70` + VIP -> *priority VIP outreach*; else -> *no action* | `pipeline.py` |
+* **0 — At-Risk Bargain Hunters**
+* **1 — Consistent Mid-Tier**
+* **2 — VIP High Spenders**
 
-Supervised models consume **all five** features (Age, Days since last
-purchase, Total purchases, Avg order value, Support tickets); K-Means and the
-scatter plots use the three-feature behavioural subspace.
+### 🎯 Retention Strategies
 
-## Dashboard layout
+| Condition                | Action                |
+| ------------------------ | --------------------- |
+| Churn > 0.70 and At-Risk | 15% Discount Voucher  |
+| Churn > 0.70 and VIP     | Priority VIP Outreach |
+| Otherwise                | No Action             |
 
-- **Top section — Pipeline Simulator & Live Controls**: sidebar inputs
-  (hold-out **test-set** sample picker or manual sliders), simulation-speed
-  control, **Run Pipeline Simulation** button, live timestamped terminal
-  log `[MM:SS.mm]` and staged progress bars (`time.sleep`-paced).
-- **Main section — Visualization Canvas**:
-  1. Plotly **2D/3D** K-Means cluster scatter with the target customer
-     highlighted and **pulsing** (Pulse Target animation).
-  2. Parallel inference cards: churn-probability **gauge** (green/yellow/red)
-     and **Predicted LTV vs Historical Average** metric card + comparison bar.
-  3. Highlighted **decision banner** from the intervention engine, plus a
-     hold-out evaluation expander (ROC-AUC, confusion matrix, RMSE, MAE).
+## 📊 Dashboard Features
 
-## Project structure
+* Animated ML pipeline with live logs and progress bars.
+* Interactive 2D/3D customer clustering visualizations.
+* Pulsing target customer animation.
+* Churn probability gauge.
+* Predicted LTV vs. historical average.
+* Automated retention decision banner.
+* Model evaluation with ROC-AUC, confusion matrix, RMSE, and MAE.
+* Manual customer input and test-set sample selection.
 
-```
-├── app.py                  # Streamlit dashboard: UI, live logs, Plotly visuals, simulation state
-├── pipeline.py             # Preprocessing, K-Means, LogisticRegression, Ridge, decision rules
-├── data_generator.py       # Synthetic customer dataset -> data/synthetic_customers.csv
-├── data/                   # Generated dataset artifact
-├── models/                 # Persisted model bundle (joblib)
-├── test_app_smoke.py       # AppTest: idle render, full simulation, canvas assertions
-├── test_edge_cases.py      # AppTest: NaN-customer imputation + manual-slider simulation
-├── test_decision_rules.py  # Unit checks: decision rules, medians, imputation error paths
+## 📁 Project Structure
+
+```text
+├── app.py
+├── pipeline.py
+├── data_generator.py
+├── data/
+│   └── synthetic_customers.csv
+├── models/
+│   └── pipeline_models.joblib
+├── test_app_smoke.py
+├── test_edge_cases.py
+├── test_decision_rules.py
 ├── requirements.txt
 └── README.md
 ```
 
-## Tests
+## ⚙️ Installation and Execution
+
+**1. Clone the repository**
 
 ```bash
-python test_decision_rules.py   # fast unit checks
-python test_app_smoke.py        # full AppTest smoke run (~1 min)
-python test_edge_cases.py       # edge cases (~1 min)
+git clone <your-repository-url>
+cd e-commerce-retention-ltv-ml-pipeline-visualizer
 ```
+
+**2. Install dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+**3. Generate data and train models (optional)**
+
+```bash
+python data_generator.py
+python pipeline.py
+```
+
+**4. Run the dashboard**
+
+```bash
+streamlit run app.py
+```
+
+The application automatically generates the dataset and trains the models on first launch if required.
+
+## 🧪 Testing
+
+```bash
+python test_decision_rules.py
+python test_app_smoke.py
+python test_edge_cases.py
+```
+
+Tests cover decision rules, dashboard rendering, pipeline execution, missing-value handling, and manual customer inputs.
+
+## 📈 Expected Model Performance
+
+| Model               | Metric  | Approximate Result |
+| ------------------- | ------- | ------------------ |
+| Logistic Regression | ROC-AUC | 0.79               |
+| Ridge Regression    | RMSE    | $145               |
+
+*Results are approximate and based on synthetic data.*
+
+## 🚀 Future Enhancements
+
+* Real-world e-commerce dataset integration.
+* Advanced churn prediction models.
+* Explainable AI using SHAP.
+* Customer analytics and campaign optimization.
+* Model monitoring and automated retraining.
+
+---
+
+<p align="center">
+  ⭐ Built with Python, Machine Learning, Streamlit & Plotly
+</p>
